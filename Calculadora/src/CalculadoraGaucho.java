@@ -9,6 +9,7 @@ import java.util.ArrayList;
 public class CalculadoraGaucho extends JFrame {
 
     private final JTextField pantalla; // cuadro de texto que muestra los numeros y resultados
+    private boolean reiniciarPantalla; // borra el resultado de la operacion anterior solo si se pone un numero, si se pone un operador nuevo continua con la operacion
 
     /**
      * constructor que inicializa la interfaz grafica de la calculadora
@@ -45,7 +46,7 @@ public class CalculadoraGaucho extends JFrame {
                 "7", "8", "9", "-",
                 "4", "5", "6", "+",
                 "1", "2", "3", "=",
-                "0", ".", "(", ")" // los parentesis los anadi para que me cuadrase
+                "0", ",", "(", ")" // los parentesis los anadi para que me cuadrase
         };
 
         // agrega los botones al panel
@@ -70,7 +71,7 @@ public class CalculadoraGaucho extends JFrame {
 
         add(panelBotones, BorderLayout.CENTER);
 
-        // asigna el listener del teclado (teoricamente pq no va)
+        // asigna el listener del teclado
         pantalla.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -85,6 +86,11 @@ public class CalculadoraGaucho extends JFrame {
     private void procesarEntrada(String comando) {
         String textoActual = pantalla.getText();
 
+        if (reiniciarPantalla) {
+            textoActual = "0";
+            reiniciarPantalla = false;
+        }
+
         switch (comando) {
             case "AC":
                 pantalla.setText("0");
@@ -98,10 +104,12 @@ public class CalculadoraGaucho extends JFrame {
                 break;
             case "=":
                 try {
-                    double resultado = evaluarExpresion(textoActual);
-                    pantalla.setText(String.valueOf(resultado));
+                    double resultado = evaluarExpresion(textoActual.replace(',', '.'));
+                    pantalla.setText(String.valueOf(resultado).replace('.', ','));
+                    reiniciarPantalla = true;
                 } catch (Exception ex) {
-                    pantalla.setText("Error");
+                    pantalla.setText("error");
+                    reiniciarPantalla = true;
                 }
                 break;
             default:
@@ -115,11 +123,16 @@ public class CalculadoraGaucho extends JFrame {
     }
 
     /**
-     * procesa las entradas del teclado y actualiza la pantalla (sigue sin ir la entrada de datos por teclado numerico xd)
+     * procesa las entradas del teclado y actualiza la pantalla
      */
     private void procesarTeclado(KeyEvent e) {
         int keyCode = e.getKeyCode(); 
         String textoActual = pantalla.getText();
+
+        if (reiniciarPantalla) {
+            textoActual = "0";
+            reiniciarPantalla = false; 
+        }
 
         if (keyCode >= KeyEvent.VK_NUMPAD0 && keyCode <= KeyEvent.VK_NUMPAD9) {
             int numero = keyCode - KeyEvent.VK_NUMPAD0;
@@ -183,7 +196,7 @@ public class CalculadoraGaucho extends JFrame {
         return c == '+' || c == '-' || c == '*' || c == '/';
     }
 
-    private int prioridad(char operador) { // jerarquia de operadores matematicos no se si esta bien xd
+    private int prioridad(char operador) {
         if (operador == '+' || operador == '-') return 1;
         if (operador == '*' || operador == '/') return 2;
         return 0;
@@ -208,9 +221,12 @@ public class CalculadoraGaucho extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            CalculadoraGaucho marco = new CalculadoraGaucho();
-            marco.setVisible(true);
+        SwingUtilities.invokeLater(new Runnable() { // esta movie me la dio chatgpt pq había un problema de procesos y no tenia ni idea de solucinarlo
+            @Override
+            public void run() {
+                CalculadoraGaucho marco = new CalculadoraGaucho();
+                marco.setVisible(true);
+            }
         });
     }
 }
