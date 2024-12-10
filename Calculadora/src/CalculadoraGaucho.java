@@ -9,8 +9,10 @@ import java.util.ArrayList;
 public class CalculadoraGaucho extends JFrame {
 
     private final JTextField pantalla; // cuadro de texto que muestra los numeros y resultados
+    private final JTextField pantallaDatoAlmacenado; // cuadro de texto que muestra el dato almacenado
     private boolean reiniciarPantalla; // borra el resultado de la operacion anterior solo si se pone un numero, si se pone un operador nuevo continua con la operacion
     private ModoEntrada modoEntrada; // referencia al modo de entrada activo
+    private String datoAlmacenado; // almacena un dato en la memoria
 
     /**
      * constructor que inicializa la interfaz grafica de la calculadora
@@ -24,58 +26,108 @@ public class CalculadoraGaucho extends JFrame {
 
         setSize(anchura / 2, altura / 3); // define el tamaño del marco
         setLocation(anchura / 4, altura / 3); // la anchura entre 4 para que quede en el medio no se muy bien pq
-        setTitle("CalculadoraGaucho - ManuAbaloRietz"); // name de la calculator
+        setTitle("CalculadoraGauchoOptimista - ManuAbaloRietz"); // name de la calculator
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // diseño principal
         setLayout(new BorderLayout());
 
-        // inicializa pantalla
+        // inicializa dato almacenado
+        datoAlmacenado = "0";
+
+        // inicializa pantalla del dato almacenado
+        pantallaDatoAlmacenado = new JTextField("Dato almacenado: " + datoAlmacenado);
+        pantallaDatoAlmacenado.setFont(new Font("Arial", Font.PLAIN, 18));
+        pantallaDatoAlmacenado.setHorizontalAlignment(SwingConstants.RIGHT);
+        pantallaDatoAlmacenado.setEditable(false);
+        add(pantallaDatoAlmacenado, BorderLayout.NORTH);
+
+        // inicializa pantalla principal
         pantalla = new JTextField("0"); // el texto de la calculadora empieza en 0
         pantalla.setFont(new Font("Arial", Font.BOLD, 36)); // estilo y tamano de la fuente q si no se ve ultrapeqeno
         pantalla.setHorizontalAlignment(SwingConstants.RIGHT); // propiedad para alinear el textico a la derecha
         pantalla.setEditable(false);
-        add(pantalla, BorderLayout.NORTH); // cuadrin de la pantalla
+        add(pantalla, BorderLayout.CENTER);
 
-        // crea el panel de botones
-        JPanel panelBotones = new JPanel();
-        panelBotones.setLayout(new GridLayout(5, 4, 5, 5));
+        // panel principal para dividir botones de numeros y operadores
+        JPanel panelPrincipal = new JPanel(new GridLayout(1, 2, 10, 10));
 
-        // define los textos de los botones
-        String[] botones = {
-                "AC", "/", "*", "DEL", // AC borra todo y DEL borra solo el ultimo num
-                "7", "8", "9", "-",
-                "4", "5", "6", "+",
-                "1", "2", "3", "=",
-                "0", ",", "(", ")" // los parentesis los anadi para que me cuadrase
+        // crea el panel de numeros
+        JPanel panelNumeros = new JPanel();
+        panelNumeros.setLayout(new GridLayout(4, 3, 5, 5)); // 4 filas, 3 columnas
+
+        // define los textos de los botones de numeros
+        String[] numeros = {
+                "7", "8", "9",
+                "4", "5", "6",
+                "1", "2", "3",
+                "0", ","
         };
 
-        // agrega los botones al panel
-        for (String texto : botones) {
+        // agrega los botones numericos al panel de numeros
+        for (String texto : numeros) {
             JButton boton = new JButton(texto);
             boton.setFont(new Font("Arial", Font.BOLD, 20));
             boton.setFocusPainted(false);
-
-            // aplica estilos
-            if (texto.equals("AC") || texto.equals("=") || texto.equals("+") || texto.equals("-") || texto.equals("*") || texto.equals("/") || texto.equals("DEL")) {
-                boton.setBackground(Color.BLUE);
-                boton.setForeground(Color.WHITE);
-            } else {
-                boton.setBackground(Color.WHITE);
-                boton.setForeground(Color.BLACK);
-            }
+            boton.setBackground(Color.WHITE);
+            boton.setForeground(Color.BLACK);
 
             // asigna la logica para cada boton
-            boton.addActionListener(e -> {
-                procesarEntrada(e.getActionCommand());
-                if (modoEntrada instanceof ModoLibre) {
+            boton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (!(modoEntrada instanceof ModoNumpad)) { // bloquea entrada por raton si esta en modo numpad
+                        procesarEntrada(e.getActionCommand());
+                    }
                     pantalla.requestFocusInWindow(); // asegura que el teclado sigue activo
                 }
             });
-            panelBotones.add(boton);
+            panelNumeros.add(boton);
         }
 
-        add(panelBotones, BorderLayout.CENTER);
+        // crea el panel de operadores
+        JPanel panelOperadores = new JPanel();
+        panelOperadores.setLayout(new GridLayout(4, 2, 5, 5)); // 4 filas, 2 columnas
+
+        // define los textos de los botones de operadores
+        String[] operadores = {
+                "AC", "C",
+                "/", "*",
+                "-", "+",
+                "="//, "AC"
+                /*esta movida tuve q hacerla pa q al hacer una opercion
+                 y tengamos el resultado, al darle a un operador 
+                no se borre el resultado
+                y pueda por ejemplo, multiplicarse */
+        };
+
+        // agrega los botones de operadores al panel de operadores
+        for (String texto : operadores) {
+            JButton boton = new JButton(texto);
+            boton.setFont(new Font("Arial", Font.BOLD, 20));
+            boton.setFocusPainted(false);
+            boton.setBackground(Color.BLUE);
+            boton.setForeground(Color.WHITE);
+
+            // asigna la logica para cada boton
+            boton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (!(modoEntrada instanceof ModoNumpad)) { // bloquea entrada por raton si esta en modo numpad
+                        procesarEntrada(e.getActionCommand());
+                    }
+                    pantalla.requestFocusInWindow(); // asegura que el teclado sigue activo
+                }
+            });
+            panelOperadores.add(boton);
+        }
+
+        // agrega los paneles al panel principal
+        panelPrincipal.add(panelNumeros);
+        panelPrincipal.add(panelOperadores);
+
+        // agrega el panel principal al centro del layout
+        add(panelPrincipal, BorderLayout.SOUTH);
 
         // asigna el listener del teclado
         pantalla.addKeyListener(new KeyAdapter() {
@@ -110,17 +162,32 @@ public class CalculadoraGaucho extends JFrame {
         // inicializa con modo numpad por defecto
         modoNumpad.setSelected(true);
         cambiarModo(new ModoNumpad(this));
-        
+
         // agrega listeners a los botones
-        modoRaton.addActionListener(e -> cambiarModo(new ModoRaton()));
-        modoNumpad.addActionListener(e -> cambiarModo(new ModoNumpad(this)));
-        modoLibre.addActionListener(e -> cambiarModo(new ModoLibre(this)));
+        modoRaton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cambiarModo(new ModoRaton());
+            }
+        });
+        modoNumpad.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cambiarModo(new ModoNumpad(CalculadoraGaucho.this));
+            }
+        });
+        modoLibre.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cambiarModo(new ModoLibre(CalculadoraGaucho.this));
+            }
+        });
 
         selectorModos.add(modoRaton);
         selectorModos.add(modoNumpad);
         selectorModos.add(modoLibre);
 
-        add(selectorModos, BorderLayout.SOUTH);
+        add(selectorModos, BorderLayout.NORTH);
     }
 
     /**
@@ -139,181 +206,189 @@ public class CalculadoraGaucho extends JFrame {
                 }
             }
         });
-
-        // desactiva botones si es modo numpad
-        for (Component componente : getComponentsEnPanelBotones()) {
-            if (componente instanceof JButton) {
-                componente.setEnabled(!(modoEntrada instanceof ModoNumpad)); // desactiva los botones en modo numpad
-            }
-        }
-    }
-
-    /**
-     * metodo para obtener todos los componentes del panel de botones
-     */
-    private Component[] getComponentsEnPanelBotones() {
-        for (Component componente : getContentPane().getComponents()) {
-            if (componente instanceof JPanel) {
-                JPanel panel = (JPanel) componente;
-                if (panel.getLayout() instanceof GridLayout) {
-                    return panel.getComponents(); // devuelve todos los botones
-                }
-            }
-        }
-        return new Component[0];
     }
 
     /**
      * procesa las entradas del raton y actualiza la pantalla
      */
     void procesarEntrada(String comando) {
-            String textoActual = pantalla.getText();
+        String textoActual = pantalla.getText();
     
-            if (reiniciarPantalla) {
-                textoActual = "0";
-                reiniciarPantalla = false;
-            }
+        if (reiniciarPantalla) {
+            textoActual = "0";
+            reiniciarPantalla = false;
+        }
     
-            switch (comando) {
-                case "AC":
+        switch (comando) {
+            case "AC":
+                pantalla.setText("0");
+                pantalla.setForeground(Color.BLACK); // resetear color a negro
+                break;
+            case "C":
+                if (textoActual.length() > 1) {
+                    pantalla.setText(textoActual.substring(0, textoActual.length() - 1));
+                } else {
                     pantalla.setText("0");
-                    break;
-                case "DEL":
-                    if (textoActual.length() > 1) {
-                        pantalla.setText(textoActual.substring(0, textoActual.length() - 1));
-                    } else {
-                        pantalla.setText("0");
-                    }
-                    break;
-                case "=":
-                    try {
-                        double resultado = evaluarExpresion(textoActual.replace(',', '.'));
-                        pantalla.setText(String.valueOf(resultado).replace('.', ','));
-                        reiniciarPantalla = true;
-                    } catch (Exception ex) {
-                        pantalla.setText("error");
-                        reiniciarPantalla = true;
-                    }
-                    break;
-                default:
-                    if (textoActual.equals("0")) {
-                        pantalla.setText(comando);
-                    } else {
-                        pantalla.setText(textoActual + comando);
-                    }
-                    break;
-            }
-        }
-    
-        /**
-         * procesa las entradas del teclado y actualiza la pantalla
-         */
-        protected void procesarTeclado(KeyEvent e) {
-            int keyCode = e.getKeyCode(); 
-            String textoActual = pantalla.getText();
-    
-            if (reiniciarPantalla) {
-                textoActual = "0";
-                reiniciarPantalla = false; 
-            }
-    
-            if (keyCode >= KeyEvent.VK_NUMPAD0 && keyCode <= KeyEvent.VK_NUMPAD9) {
-                int numero = keyCode - KeyEvent.VK_NUMPAD0;
-                pantalla.setText(textoActual.equals("0") ? String.valueOf(numero) : textoActual + numero);
-            } else if (keyCode == KeyEvent.VK_ADD) {
-                pantalla.setText(textoActual + "+");
-            } else if (keyCode == KeyEvent.VK_SUBTRACT) {
-                pantalla.setText(textoActual + "-");
-            } else if (keyCode == KeyEvent.VK_MULTIPLY) {
-                pantalla.setText(textoActual + "*");
-            } else if (keyCode == KeyEvent.VK_DIVIDE) {
-                pantalla.setText(textoActual + "/");
-            } else if (keyCode == KeyEvent.VK_DECIMAL) {
-                pantalla.setText(textoActual + ","); // agrega coma en lugar de punto
-            } else if (keyCode == KeyEvent.VK_ENTER) {
-                procesarEntrada("=");
-            } else if (keyCode == KeyEvent.VK_BACK_SPACE) {
-                procesarEntrada("DEL");
-            }
-        }
-    
-        /**
-         * evalua una expresion matematica en formato string
-         */
-        private double evaluarExpresion(String expresion) throws Exception {
-            ArrayList<Double> numeros = new ArrayList<>();
-            ArrayList<Character> operadores = new ArrayList<>();
-            String numeroActual = "";
-    
-            for (int i = 0; i < expresion.length(); i++) {
-                char c = expresion.charAt(i);
-    
-                if (Character.isDigit(c) || c == '.') {
-                    numeroActual += c;
-                } else if (esOperador(c)) {
-                    if (!numeroActual.isEmpty()) {
-                        numeros.add(Double.parseDouble(numeroActual));
-                        numeroActual = "";
-                    }
-                    while (!operadores.isEmpty() && prioridad(operadores.get(operadores.size() - 1)) >= prioridad(c)) {
-                        procesarOperacion(numeros, operadores);
-                    }
-                    operadores.add(c);
                 }
-            }
+                break;
+            case "=":
+                try {
+                    double resultado = evaluarExpresion(textoActual.replace(',', '.'));
+                    pantalla.setText(String.valueOf(resultado).replace('.', ','));
     
-            if (!numeroActual.isEmpty()) {
-                numeros.add(Double.parseDouble(numeroActual));
-            }
+                    // 
+                    if (resultado < 0) {
+                        pantalla.setForeground(Color.RED); // rojo si es negativo
+                    } else {
+                        pantalla.setForeground(Color.BLACK); // negro si es positivo o cero
+                    }
     
-            while (!operadores.isEmpty()) {
-                procesarOperacion(numeros, operadores);
-            }
-    
-            if (numeros.size() != 1) {
-                throw new Exception("error en la expresion");
-            }
-    
-            return numeros.get(0);
-        }
-    
-        private boolean esOperador(char c) {
-            return c == '+' || c == '-' || c == '*' || c == '/';
-        }
-    
-        private int prioridad(char operador) {
-            if (operador == '+' || operador == '-') return 1;
-            if (operador == '*' || operador == '/') return 2;
-            return 0;
-        }
-    
-        private void procesarOperacion(ArrayList<Double> numeros, ArrayList<Character> operadores) throws Exception {
-            if (numeros.size() < 2) throw new Exception("expresion invalida");
-    
-            double b = numeros.remove(numeros.size() - 1);
-            double a = numeros.remove(numeros.size() - 1);
-            char operador = operadores.remove(operadores.size() - 1);
-    
-            switch (operador) {
-                case '+': numeros.add(a + b); break;
-                case '-': numeros.add(a - b); break;
-                case '*': numeros.add(a * b); break;
-                case '/':
-                    if (b == 0) throw new Exception("division por cero");
-                    numeros.add(a / b);
-                    break;
-            }
-        }
-    
-        public static void main(String[] args) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    CalculadoraGaucho marco = new CalculadoraGaucho();
-                    marco.setVisible(true);
+                    reiniciarPantalla = true;
+                } catch (Exception ex) {
+                    pantalla.setText("error");
+                    pantalla.setForeground(Color.BLACK); // negro por defecto para errores
+                    reiniciarPantalla = true;
                 }
-            });
+                break;
+            default:
+                if (textoActual.equals("0")) {
+                    pantalla.setText(comando);
+                } else {
+                    pantalla.setText(textoActual + comando);
+                }
+                break;
         }
+    }
+    
+
+    /**
+     * actualiza el dato mostrado en la pantalla del dato almacenado
+     */
+    private void actualizarPantallaDatoAlmacenado() {
+        pantallaDatoAlmacenado.setText("Dato almacenado: " + datoAlmacenado);
+    }
+
+    /**
+     * evalua una expresion matematica en formato string
+     */
+    private double evaluarExpresion(String expresion) throws Exception {
+        ArrayList<Double> numeros = new ArrayList<>();
+        ArrayList<Character> operadores = new ArrayList<>();
+        String numeroActual = "";
+
+        for (int i = 0; i < expresion.length(); i++) {
+            char c = expresion.charAt(i);
+
+            if (Character.isDigit(c) || c == '.') {
+                numeroActual += c;
+            } else if (esOperador(c)) {
+                if (!numeroActual.isEmpty()) {
+                    numeros.add(Double.parseDouble(numeroActual));
+                    numeroActual = "";
+                }
+                while (!operadores.isEmpty() && prioridad(operadores.get(operadores.size() - 1)) >= prioridad(c)) {
+                    procesarOperacion(numeros, operadores);
+                }
+                operadores.add(c);
+            }
+        }
+
+        if (!numeroActual.isEmpty()) {
+            numeros.add(Double.parseDouble(numeroActual));
+        }
+
+        while (!operadores.isEmpty()) {
+            procesarOperacion(numeros, operadores);
+        }
+
+        if (numeros.size() != 1) {
+            throw new Exception("error en la expresion");
+        }
+
+        return numeros.get(0);
+    }
+
+    private boolean esOperador(char c) {
+        return c == '+' || c == '-' || c == '*' || c == '/';
+    }
+
+    private int prioridad(char operador) {
+        if (operador == '+' || operador == '-') return 1;
+        if (operador == '*' || operador == '/') return 2;
+        return 0;
+    }
+
+    private void procesarOperacion(ArrayList<Double> numeros, ArrayList<Character> operadores) throws Exception {
+        if (numeros.size() < 2) throw new Exception("expresion invalida");
+
+        double b = numeros.remove(numeros.size() - 1);
+        double a = numeros.remove(numeros.size() - 1);
+        char operador = operadores.remove(operadores.size() - 1);
+
+        switch (operador) {
+            case '+':
+                numeros.add(a + b);
+                break;
+            case '-':
+                numeros.add(a - b);
+                break;
+            case '*':
+                numeros.add(a * b);
+                break;
+            case '/':
+                if (b == 0) throw new Exception("division por cero");
+                numeros.add(a / b);
+                break;
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                CalculadoraGaucho marco = new CalculadoraGaucho();
+                marco.setVisible(true);
+            }
+        });
+    }
+    
+       /**
+ * procesa las entradas del teclado 
+ */
+protected void procesarTeclado(KeyEvent e) {
+    int keyCode = e.getKeyCode();
+    String textoActual = pantalla.getText();
+
+    if (reiniciarPantalla) {
+        textoActual = "0";
+        reiniciarPantalla = false;
+    }
+
+    // Manejo de numeros
+    if (keyCode >= KeyEvent.VK_NUMPAD0 && keyCode <= KeyEvent.VK_NUMPAD9) {
+        int numero = keyCode - KeyEvent.VK_NUMPAD0;
+        pantalla.setText(textoActual.equals("0") ? String.valueOf(numero) : textoActual + numero);
+    }
+    // Manejo de operadores
+    else if (keyCode == KeyEvent.VK_ADD) {
+        pantalla.setText(textoActual + "+");
+    } else if (keyCode == KeyEvent.VK_SUBTRACT) {
+        pantalla.setText(textoActual + "-");
+    } else if (keyCode == KeyEvent.VK_MULTIPLY) {
+        pantalla.setText(textoActual + "*");
+    } else if (keyCode == KeyEvent.VK_DIVIDE) {
+        pantalla.setText(textoActual + "/");
+    } else if (keyCode == KeyEvent.VK_DECIMAL) {
+        pantalla.setText(textoActual + ","); // agrega coma en lugar de punto
+    }
+    // Manejo del enter y borrar
+    else if (keyCode == KeyEvent.VK_ENTER) {
+        procesarEntrada("=");
+    } else if (keyCode == KeyEvent.VK_BACK_SPACE) {
+        procesarEntrada("C");
+    }
+}
+
     }
     
     /**
@@ -340,9 +415,6 @@ public class CalculadoraGaucho extends JFrame {
     /**
      * modo que permite entrada solo por teclado numerico
      */
-    /**
-     * modo que permite entrada solo por teclado numerico
-     */
     class ModoNumpad implements ModoEntrada {
         private final CalculadoraGaucho calculadora;
     
@@ -361,56 +433,55 @@ public class CalculadoraGaucho extends JFrame {
                         KeyEvent.VK_NUMPAD8, KeyEvent.VK_NUMPAD9:
                     int numero = keyCode - KeyEvent.VK_NUMPAD0;
                     calculadora.procesarEntrada(String.valueOf(numero));
-                break;
-
-            case KeyEvent.VK_DECIMAL: // tecla del punto decimal
-                calculadora.procesarEntrada(",");
-                break;
-
-            case KeyEvent.VK_ADD: // tecla +
-                calculadora.procesarEntrada("+");
-                break;
-
-            case KeyEvent.VK_SUBTRACT: // tecla -
-                calculadora.procesarEntrada("-");
-                break;
-
-            case KeyEvent.VK_MULTIPLY: // tecla *
-                calculadora.procesarEntrada("*");
-                break;
-
-            case KeyEvent.VK_DIVIDE: // tecla /
-                calculadora.procesarEntrada("/");
-                break;
-
-            case KeyEvent.VK_ENTER: // tecla Enter
-                calculadora.procesarEntrada("=");
-                break;
-
-            case KeyEvent.VK_BACK_SPACE: // tecla Backspace
-                calculadora.procesarEntrada("DEL");
-                break;
-
-            default:
-                // ignora cualquier otra tecla
-                break;
+                    break;
+    
+                case KeyEvent.VK_DECIMAL: // tecla del punto decimal
+                    calculadora.procesarEntrada(",");
+                    break;
+    
+                case KeyEvent.VK_ADD: // tecla +
+                    calculadora.procesarEntrada("+");
+                    break;
+    
+                case KeyEvent.VK_SUBTRACT: // tecla -
+                    calculadora.procesarEntrada("-");
+                    break;
+    
+                case KeyEvent.VK_MULTIPLY: // tecla *
+                    calculadora.procesarEntrada("*");
+                    break;
+    
+                case KeyEvent.VK_DIVIDE: // tecla /
+                    calculadora.procesarEntrada("/");
+                    break;
+    
+                case KeyEvent.VK_ENTER: // tecla Enter
+                    calculadora.procesarEntrada("=");
+                    break;
+    
+                case KeyEvent.VK_BACK_SPACE: // tecla Backspace
+                    calculadora.procesarEntrada("C");
+                    break;
+    
+                default:
+                    // ignora cualquier otra tecla
+                    break;
+            }
         }
     }
-}
-
-
-/**
- * modo que permite entrada tanto por raton como por teclado
- */
-class ModoLibre implements ModoEntrada {
-    private final CalculadoraGaucho calculadora;
-
-    public ModoLibre(CalculadoraGaucho calculadora) {
-        this.calculadora = calculadora;
-    }
-
-    @Override
-    public void procesarEntradaTeclado(KeyEvent e) {
-        calculadora.procesarTeclado(e);
+    
+    /**
+     * modo que permite entrada tanto por raton como por teclado
+     */
+    class ModoLibre implements ModoEntrada {
+        private final CalculadoraGaucho calculadora;
+    
+        public ModoLibre(CalculadoraGaucho calculadora) {
+            this.calculadora = calculadora;
+        }
+    
+        @Override
+        public void procesarEntradaTeclado(KeyEvent e) {
+            calculadora.procesarTeclado(e);
     }
 }

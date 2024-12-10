@@ -1,2 +1,7 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/uoJDChcG)
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=17286671&assignment_repo_type=AssignmentRepo)
+La calculadora cumple con la mayoria de la calculadora cumple con los requisitos esteticos y funcionales, pecando mas por la parte de esta ultima. 
+Los fallos a nivel funcional que encontre son los siguientes:
+- no guarda el resultado, es decir si queremos hacer una nueva operacion con el ultimo resultado mas nos vale tener buena memoria pq con esta calculadora no lo vas a conseguir hacer de forma automatica, tenia un boton estilo ans, pero no se que toque y ahora pone guardar y por eso decidi eliminarlo.
+- una vez que sale un numero negativo se pone en rojo, lo malo es que hasta que se consiga una operacion que de un numero positivo, tanto los operadores como los numeros van a seguir saliendo en rojo pero bueno, a la vida hay q ponerle un poco de color a veces.
+- no se pueden realizar operaciones con numeros negativos de ahi el rebranading de calculadora gaucho a calculadora gaucho optimista, al contrario  q van gaal aqui predicamos con el siempre positiva nunca negativa
+- lo unico q se podria decir que falla de los tres modos de entrada que hay, es que al cambiar de modo el foco se queda en los selectores y hay que hacer foco en la pantalla, pero bueno eso pasa en las mejores casas ya que si quieres mandar un wasap tienes q darle al textview para escribir el mensaje. 
+- y gracias a dios ya no hay mas errores
